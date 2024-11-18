@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error Correction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 700px;
+            margin: auto;
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        label, select, input, button {
+            display: block;
+            margin: 10px 0;
+            width: 100%;
+        }
+        button {
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .output, .steps {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Error Correction</h1>
+        <h2>Select Technique and Input Data</h2>
+        <form id="errorCorrectionForm">
+            <!-- Select Error Correction Technique -->
+            <label for="method">Choose Error Correction Method:</label>
+            <select id="method" required>
+                <option value="lrc">LRC (Longitudinal Redundancy Check)</option>
+                <option value="vrc">VRC (Vertical Redundancy Check)</option>
+                <option value="checksum">Checksum</option>
+                <option value="crc">CRC (Cyclic Redundancy Check)</option>
+                <option value="hamming">Hamming Code</option>
+            </select>
+            
+            <!-- Input Format -->
+            <label for="format">Input Data Format:</label>
+            <select id="format" required>
+                <option value="binary">Binary</option>
+                <option value="decimal">Decimal</option>
+                <option value="octet">Octet</option>
+                <option value="hexadecimal">Hexadecimal</option>
+            </select>
+            
+            <!-- Data Input -->
+            <label for="data">Enter Data:</label>
+            <input type="text" id="data" placeholder="Enter data here" required>
+            
+            <!-- Submit Button -->
+            <button type="button" onclick="performErrorCorrection()">Perform Correction</button>
+        </form>
+        
+        <!-- Output Section -->
+        <div class="output" id="output">
+            <h2>Output</h2>
+            <p id="result">Result will appear here...</p>
+        </div>
+
+        <!-- Stepwise Solution -->
+        <div class="steps" id="steps">
+            <h2>Stepwise Solution</h2>
+            <p id="solution">Steps will appear here...</p>
+        </div>
+    </div>
+
+    <script>
+        function performErrorCorrection() {
+            // Get user inputs
+            const method = document.getElementById("method").value;
+            const format = document.getElementById("format").value;
+            const inputData = document.getElementById("data").value.trim();
+            const outputDiv = document.getElementById("result");
+            const stepsDiv = document.getElementById("solution");
+
+            let binaryData;
+
+            // Convert input to binary format
+            try {
+                switch (format) {
+                    case "binary":
+                        binaryData = inputData;
+                        break;
+                    case "decimal":
+                        binaryData = parseInt(inputData, 10).toString(2);
+                        break;
+                    case "octet":
+                        binaryData = parseInt(inputData, 8).toString(2);
+                        break;
+                    case "hexadecimal":
+                        binaryData = parseInt(inputData, 16).toString(2);
+                        break;
+                    default:
+                        throw new Error("Invalid format.");
+                }
+            } catch (e) {
+                outputDiv.textContent = "Invalid input data or format.";
+                stepsDiv.textContent = "";
+                return;
+            }
+
+            // Initialize output and steps
+            let result = "";
+            let steps = Input converted to binary: ${binaryData}\n;
+
+            // Apply the chosen error correction method
+            switch (method) {
+                case "lrc":
+                    [result, steps] = lrc(binaryData, steps);
+                    break;
+                case "vrc":
+                    [result, steps] = vrc(binaryData, steps);
+                    break;
+                case "checksum":
+                    [result, steps] = checksum(binaryData, steps);
+                    break;
+                case "crc":
+                    [result, steps] = crc(binaryData, steps);
+                    break;
+                case "hamming":
+                    [result, steps] = hammingCode(binaryData, steps);
+                    break;
+                default:
+                    result = "Invalid method selected.";
+                    steps = "";
+            }
+
+            // Display results
+            outputDiv.textContent = result;
+            stepsDiv.textContent = steps;
+        }
+
+        // Error Correction Methods
+        function lrc(data, steps) {
+            const rows = data.match(/.{1,8}/g) || [];
+            const parityBits = rows.map(row => row.split('').reduce((sum, bit) => sum ^ parseInt(bit), 0));
+            steps += Rows: ${rows.join(" | ")}\nParity bits: ${parityBits.join("")};
+            return [LRC Parity Bits: ${parityBits.join("")}, steps];
+        }
+
+        function vrc(data, steps) {
+            const parity = data.split('').reduce((sum, bit) => sum ^ parseInt(bit), 0);
+            steps += Calculated parity: ${parity};
+            return [VRC Parity Bit: ${parity}, steps];
+        }
+
+        function checksum(data, steps) {
+            const words = data.match(/.{1,16}/g) || [];
+            const checksum = words.reduce((sum, word) => sum + parseInt(word, 2), 0).toString(2).slice(-16);
+            steps += Words: ${words.join(" | ")}\nChecksum: ${checksum};
+            return [Checksum: ${checksum}, steps];
+        }
+
+        function crc(data, steps) {
+            const divisor = "1101"; // Example CRC-4
+            let dividend = data;
+            while (dividend.length >= divisor.length) {
+                const segment = dividend.slice(0, divisor.length);
+                dividend = (parseInt(segment, 2) ^ parseInt(divisor, 2)).toString(2) + dividend.slice(divisor.length);
+                dividend = dividend.replace(/^0+/, ""); // Remove leading zeros
+            }
+            steps += Remainder after division: ${dividend};
+            return [CRC Remainder: ${dividend}, steps];
+        }
+
+        function hammingCode(data, steps) {
+            const n = data.length;
+            const r = Math.ceil(Math.log2(n + 1));
+            const totalBits = n + r;
+            const hammingCode = Array(totalBits).fill(null);
+
+            let j = 0;
+            for (let i = 0; i < totalBits; i++) {
+                if (Math.log2(i + 1) % 1 === 0) {
+                    hammingCode[i] = "P";
+                } else {
+                    hammingCode[i] = data[j++];
+                }
+            }
+
+            steps += Hamming code layout with parity placeholders: ${hammingCode.join("")};
+            return [Hamming Code: ${hammingCode.join("")}, steps];
+        }
+    </script>
+</body>
+</html>
